@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import bcrypt from "bcrypt";
 
 type RegisterUserData = {
     username: string;
@@ -40,3 +41,25 @@ export const registerUser = async (data: RegisterUserData) => {
 
     return user;
 }
+
+export const loginUser = async (data: { email: string; password: string }) => {
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                { email: data.email },
+            ]
+        },
+    });
+
+    if(!user) {
+        throw new Error("Invalid credentials");
+    }
+
+    const isMatch = await bcrypt.compare(data.password, user.passwordHash);
+
+    if(!isMatch) {
+        throw new Error("Invalid credentials");
+    }
+
+    return user;
+};
