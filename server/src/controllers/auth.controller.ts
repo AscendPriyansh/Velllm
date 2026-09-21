@@ -1,0 +1,34 @@
+import type { Request, Response } from "express";
+import { registerUser as registerUserService } from "../services/auth.service.js";
+import bcrypt from "bcrypt";
+
+export const registerUser = async (req: Request, res: Response) => {
+    try {
+        const { username, name, email, password } = req.body;
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const user = await registerUserService({
+            username,
+            name,
+            email,
+            passwordHash
+        });
+
+        res.status(201).json({
+            message: "User registered successfully",
+            user
+        });
+    }
+    catch(err) {
+        if(err instanceof Error && err.message === "User already exists") {
+            return res.status(409).json({
+                error: "User already exists"
+            })
+        }
+
+        return res.status(500).json({
+            error: "Error registering user",
+        });
+    };
+};
