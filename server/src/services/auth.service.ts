@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 type RegisterUserData = {
@@ -51,15 +52,31 @@ export const loginUser = async (data: { email: string; password: string }) => {
         },
     });
 
-    if(!user) {
+    if (!user) {
         throw new Error("Invalid credentials");
     }
 
     const isMatch = await bcrypt.compare(data.password, user.passwordHash);
 
-    if(!isMatch) {
+    if (!isMatch) {
         throw new Error("Invalid credentials");
     }
 
-    return user;
+    const token = jwt.sign({
+        userId: user.id,
+        username: user.userName,
+        email: user.email
+    }, process.env.JWT_SECRET as string, {
+        expiresIn: "7d"
+    });
+
+    return {
+        user: {
+            id: user.id,
+            userName: user.userName,
+            name: user.name,
+            email: user.email,
+        },
+        token,
+    };
 };
