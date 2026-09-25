@@ -17,7 +17,7 @@ type GetRoomData = {
     roomId: string
 };
 
-type GetAllRoomData = {
+type GetUserData = {
     userId: string
 };
 
@@ -119,7 +119,7 @@ export const getRoomService = async (data: GetRoomData) => {
     return room;
 };
 
-export const getAllRoomService = async (data: GetAllRoomData) => {
+export const getAllRoomService = async (data: GetUserData) => {
     const rooms = await prisma.room.findMany({
         where: {
             members: {
@@ -135,4 +135,39 @@ export const getAllRoomService = async (data: GetAllRoomData) => {
     }
 
     return rooms;
+};
+
+export const getAllMemberService = async (data: GetRoomData) => {
+    const requestMembership = await prisma.roomMember.findUnique({
+        where: {
+            userId_roomId: {
+                userId: data.requesterId,
+                roomId: data.roomId
+            }
+        },
+    });
+
+    if(!requestMembership) {
+        throw new Error("You are not the member of the Room");
+    }
+
+    const members = await prisma.room.findMany({
+        where: {
+            id: data.roomId
+        },
+        select: {
+            members: {
+                select: {
+                    user: {
+                        select: {
+                            name: true,
+                            avatarUrl: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return members;
 };

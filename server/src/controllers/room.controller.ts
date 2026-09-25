@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -116,6 +116,45 @@ export const getAllRoom = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: "Rooms fetched Successfully",
             rooms
+        });
+
+    } catch(err) {
+        return res.status(500).json({
+            error: "Internal Server Error"
+        });
+    }
+};
+
+export const getAllMember = async (req: Request, res: Response) => {
+    try {
+        const roomId = req.params.roomId;
+
+        if(!req.userId) {
+            return res.status(401).json({
+                message: "Unauthorized"
+            });
+        }
+
+        if(!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID is not present"
+            });
+        }
+
+        const members = await getAllMemberService({
+            requesterId: req.userId,
+            roomId
+        });
+
+        if(!members) {
+            return res.status(404).json({
+                message: "Something went wrong"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Members fetched successfully",
+            members
         });
 
     } catch(err) {
