@@ -17,6 +17,10 @@ type GetRoomData = {
     roomId: string
 };
 
+type GetAllRoomData = {
+    userId: string
+};
+
 export const roomCreationService = async (data: RoomCreationData) => {
     const room = await prisma.$transaction(async (tx) => {
         const newRoom = await tx.room.create({
@@ -113,4 +117,22 @@ export const getRoomService = async (data: GetRoomData) => {
     }
 
     return room;
+};
+
+export const getAllRoomService = async (data: GetAllRoomData) => {
+    const rooms = await prisma.room.findMany({
+        where: {
+            members: {
+                some: {
+                    userId: data.userId
+                }
+            }
+        }
+    });
+
+    if(!rooms) {
+        throw new Error("User don't have rooms");
+    }
+
+    return rooms;
 };
