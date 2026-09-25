@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -22,6 +22,33 @@ export const createRoom = async (req: Request, res: Response) => {
             message: "Room created successfully",
             room
         });
+    } catch(err) {
+        res.status(500).json({
+            error: "Internal Server Error"
+        });
+    };
+};
+
+export const addRoomMember = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const roomId = req.params.roomId;
+
+        if(!req.userId) {
+            return res.status(401).json({
+                message: "Unauthorized"
+            });
+        };
+
+        const addMember = await addRoomMemberService({
+            email,
+            roomId
+        });
+
+        return res.status(200).json({
+            message: "Member added successfully"
+        });
+
     } catch(err) {
         res.status(500).json({
             error: "Internal Server Error"
