@@ -19,6 +19,8 @@ type GetRoomData = {
 
 type GetUserData = {
     userId: string
+    roomId: string
+    requesterId: string
 };
 
 export const roomCreationService = async (data: RoomCreationData) => {
@@ -170,4 +172,65 @@ export const getAllMemberService = async (data: GetRoomData) => {
     });
 
     return members;
+};
+
+export const removeRoomMemberService = async (data: GetUserData) => {
+    const requestMembership = await prisma.roomMember.findUnique({
+        where: {
+            userId_roomId: {
+                userId: data.userId,
+                roomId: data.roomId
+            }
+        }
+    });
+
+    if(!requestMembership) {
+        throw new Error("Either User is not the member or room doesn't exist");
+    }
+
+    const ownerCheck = await prisma.room.findUnique({
+        where: {
+            id: data.roomId,
+            ownerId: data.requesterId,
+        }
+    });
+
+    if(!ownerCheck) {
+        throw new Error("You don't have permission to perform this action")
+    }
+
+    const deleteMember = await prisma.roomMember.delete({
+        where: {
+            userId_roomId: {
+                userId: data.userId,
+                roomId: data.roomId
+            }
+        }
+    });
+
+    return deleteMember;
+};
+
+export const isLiveService = async (data: GetRoomData) => {
+    const room = await prisma.room.findUnique({
+        where: {
+            id: data.roomId,
+            ownerId: data.requesterId
+        }
+    });
+
+    if(!room) {
+        throw new Error("Room doesn't exist");
+    }
+
+    const toggleStatus = await prisma.room.update({
+        where: {
+            id: data.roomId
+        },
+        data: {
+            isLive: !room.isLive
+        }
+    });
+
+    return toggleStatus;
 };

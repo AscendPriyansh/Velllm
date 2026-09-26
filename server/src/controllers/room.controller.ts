@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -88,7 +88,7 @@ export const getRoom = async (req: Request, res: Response) => {
             message: "Room fetched successfully",
             room
         });
-    } catch(err) {
+    } catch (err) {
         return res.status(500).json({
             error: "Internal Server Error"
         });
@@ -97,17 +97,19 @@ export const getRoom = async (req: Request, res: Response) => {
 
 export const getAllRoom = async (req: Request, res: Response) => {
     try {
-        if(!req.userId) {
+        if (!req.userId) {
             return res.status(401).json({
                 message: "Unauthorized"
             });
         }
 
         const rooms = await getAllRoomService({
-            userId: req.userId
+            userId: req.userId,
+            roomId: "",
+            requesterId: ""
         });
 
-        if(!rooms) {
+        if (!rooms) {
             return res.status(404).json({
                 message: "User is not part of any rooms"
             });
@@ -118,7 +120,7 @@ export const getAllRoom = async (req: Request, res: Response) => {
             rooms
         });
 
-    } catch(err) {
+    } catch (err) {
         return res.status(500).json({
             error: "Internal Server Error"
         });
@@ -129,13 +131,13 @@ export const getAllMember = async (req: Request, res: Response) => {
     try {
         const roomId = req.params.roomId;
 
-        if(!req.userId) {
+        if (!req.userId) {
             return res.status(401).json({
                 message: "Unauthorized"
             });
         }
 
-        if(!roomId || typeof roomId !== "string") {
+        if (!roomId || typeof roomId !== "string") {
             return res.status(400).json({
                 message: "Room ID is not present"
             });
@@ -146,7 +148,7 @@ export const getAllMember = async (req: Request, res: Response) => {
             roomId
         });
 
-        if(!members) {
+        if (!members) {
             return res.status(404).json({
                 message: "Something went wrong"
             });
@@ -155,6 +157,92 @@ export const getAllMember = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: "Members fetched successfully",
             members
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            error: "Internal Server Error"
+        });
+    }
+};
+
+export const removeRoomMember = async (req: Request, res: Response) => {
+    try {
+        const roomId = req.params.roomId;
+        const userId = req.params.userId;
+        const requesterId = req.userId;
+
+        if (!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID doesn't exist"
+            });
+        }
+
+        if (!userId || typeof userId !== "string") {
+            return res.status(400).json({
+                message: "User ID doesn't exist"
+            });
+        }
+
+        if (!requesterId || typeof requesterId !== "string") {
+            return res.status(400).json({
+                message: "Unauthorized"
+            });
+        }
+
+        const member = await removeRoomMemberService({
+            userId: userId,
+            roomId: roomId,
+            requesterId: requesterId
+        });
+
+        if(!member) {
+            return res.status(400).json({
+                message: "Member doesn't exist"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Member removed successfully"
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            error: "Internal Server Error"
+        });
+    };
+};
+
+export const isLive = async (req: Request, res: Response) => {
+    try {
+        const roomId = req.params.roomId;
+        const requesterId = req.userId;
+
+        if(!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID doesn't exist"
+            });
+        };
+
+        if(!requesterId || typeof requesterId !== "string") {
+            return res.status(400).json({
+                message: "User ID doesn't exist"
+            });
+        };
+
+        const liveStatus = await isLiveService({
+            requesterId: requesterId,
+            roomId: roomId
+        });
+
+        if(!liveStatus) {
+            return res.status(403).json({
+                message: "Problem occurred while changing live status"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Room live status changed successfully"
         });
 
     } catch(err) {
