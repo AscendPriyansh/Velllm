@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService, updateRoomService, deleteRoomService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService, updateRoomService, deleteRoomService, leaveRoomMemberService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -317,6 +317,39 @@ export const deleteRoom = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             message: "Room Deleted Successfully"
+        });
+
+    } catch(err) {
+        return res.status(500).json({
+            error: "Internal Server Error"
+        });
+    }
+};
+
+export const leaveRoomMember = async (req: Request, res: Response) => {
+    try {
+        const requesterId = req.userId;
+        const roomId = req.params.roomId;
+
+        if(!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID doesn't exist"
+            });
+        };
+
+        if(!requesterId || typeof requesterId !== "string") {
+            return res.status(400).json({
+                message: "User ID doesn't exist"
+            });
+        };
+
+        const leaveRoom = await leaveRoomMemberService({
+            requesterId: requesterId,
+            roomId: roomId
+        });
+
+        return res.status(200).json({
+            message: "Left room Successfully"
         });
 
     } catch(err) {

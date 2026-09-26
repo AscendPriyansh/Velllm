@@ -265,3 +265,30 @@ export const deleteRoomService = async (data: GetRoomData) => {
 
     return deleteRoom;
 };
+
+export const leaveRoomMemberService = async (data: GetRoomData) => {
+    const room = await prisma.room.findUnique({
+        where: {
+            id: data.roomId
+        }
+    });
+
+    if(!room) {
+        throw new Error("Room doesn't exist");
+    }
+
+    if(room.ownerId === data.requesterId) {
+        throw new Error("Room Owner cannot leave their own room");
+    }
+
+    const leaveRoom = await prisma.roomMember.delete({
+        where: {
+            userId_roomId: {
+                roomId: data.roomId,
+                userId: data.requesterId
+            }
+        },
+    });
+
+    return leaveRoom;
+};
