@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService, updateRoomService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService, updateRoomService, deleteRoomService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -276,6 +276,12 @@ export const updateRoom = async (req: Request, res: Response) => {
             name: name
         });
 
+        if(!updateRoom) {
+            return res.status(403).json({
+                message: "Problem occurred while updating room"
+            });
+        }
+
         return res.status(200).json({
             message: "Room updated successfully"
         });
@@ -283,6 +289,39 @@ export const updateRoom = async (req: Request, res: Response) => {
     } catch(err) {
         return res.status(500).json({
             Error: "Internal Server Error"
+        });
+    }
+};
+
+export const deleteRoom = async (req: Request, res: Response) => {
+    try {
+        const roomId = req.params.roomId;
+        const requesterId = req.userId;
+
+        if(!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID doesn't exist"
+            });
+        };
+
+        if(!requesterId || typeof requesterId !== "string") {
+            return res.status(400).json({
+                message: "User ID doesn't exist"
+            });
+        };
+
+        const deleteRoom = await deleteRoomService({
+            roomId: roomId,
+            requesterId: requesterId
+        });
+
+        return res.status(200).json({
+            message: "Room Deleted Successfully"
+        });
+
+    } catch(err) {
+        return res.status(500).json({
+            error: "Internal Server Error"
         });
     }
 };

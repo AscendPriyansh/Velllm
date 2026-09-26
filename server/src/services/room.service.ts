@@ -252,9 +252,16 @@ export const updateRoomService = async (data: GetUpdateRoomData) => {
         }
     });
 
-    if(!updateRoom) {
-        throw new Error("Room doesn't exist or you don't have the permission");
-    }
-
     return updateRoom;
+};
+
+export const deleteRoomService = async (data: GetRoomData) => {
+    const deleteRoom = await prisma.room.delete({
+        where: {
+            id: data.roomId,
+            ownerId: data.requesterId
+        }
+    });
+
+    return deleteRoom;
 };
