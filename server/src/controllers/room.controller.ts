@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService } from "../services/room.service.js";
+import { roomCreationService, addRoomMemberService, getRoomService, getAllRoomService, getAllMemberService, removeRoomMemberService, isLiveService, updateRoomService } from "../services/room.service.js";
 
 export const createRoom = async (req: Request, res: Response) => {
     try {
@@ -248,6 +248,41 @@ export const isLive = async (req: Request, res: Response) => {
     } catch(err) {
         return res.status(500).json({
             error: "Internal Server Error"
+        });
+    }
+};
+
+export const updateRoom = async (req: Request, res: Response) => {
+    try {
+        const requesterId = req.userId;
+        const roomId = req.params.roomId;
+        const name = req.body.name; 
+
+        if(!roomId || typeof roomId !== "string") {
+            return res.status(400).json({
+                message: "Room ID doesn't exist"
+            });
+        };
+
+        if(!requesterId || typeof requesterId !== "string") {
+            return res.status(400).json({
+                message: "User ID doesn't exist"
+            });
+        };
+
+        const updateRoom = await updateRoomService({
+            requesterId: requesterId,
+            roomId: roomId,
+            name: name
+        });
+
+        return res.status(200).json({
+            message: "Room updated successfully"
+        });
+
+    } catch(err) {
+        return res.status(500).json({
+            Error: "Internal Server Error"
         });
     }
 };

@@ -8,3 +8,7 @@ export const createRoomSchema = z.object({
 export const addRoomMemberSchema = z.object({
     email: z.string().email("Invalid email address")
 });
+
+export const updateRoomSchema = z.object({
+    name: z.string().min(1, "Room name is required").max(100, "Room name must be at most 100 characters long"),
+});

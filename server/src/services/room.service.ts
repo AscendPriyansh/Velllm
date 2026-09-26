@@ -17,6 +17,12 @@ type GetRoomData = {
     roomId: string
 };
 
+type GetUpdateRoomData = {
+    requesterId: string
+    roomId: string
+    name: string
+};
+
 type GetUserData = {
     userId: string
     roomId: string
@@ -233,4 +239,22 @@ export const isLiveService = async (data: GetRoomData) => {
     });
 
     return toggleStatus;
+};
+
+export const updateRoomService = async (data: GetUpdateRoomData) => {
+    const updateRoom = await prisma.room.update({
+        where: {
+            id: data.roomId,
+            ownerId: data.requesterId
+        },
+        data: {
+            name: data.name
+        }
+    });
+
+    if(!updateRoom) {
+        throw new Error("Room doesn't exist or you don't have the permission");
+    }
+
+    return updateRoom;
 };
